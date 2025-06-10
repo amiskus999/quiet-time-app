@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-M">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Quiet Time Web App</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Define CSS Variables for Theming */
+        :root {
+            --bg-primary: #F0FFEE; /* Very light green background */
+            --container-bg: #FFFFFF;
+            --text-primary: #36454F; /* Dark Slate Gray */
+            --h1-color: #2E8B57; /* Sea Green */
+            --input-bg: #FFFFFF;
+            --input-border: #CCCCCC;
+            --input-text: #333333;
+            --placeholder-text: #999999;
+            --button-text-color: #FFFFFF;
+            --button-hover-brightness: 0.85; /* For hover effect */
+            --history-item-bg: #E0FFE0; /* Light green for history items */
+            --history-item-hover-bg: #CCFFCC; /* Lighter green on hover */
+        }
+
+        /* Dark Mode variables */
+        body.dark-mode {
+            --bg-primary: #1A202C; /* Dark background */
+            --container-bg: #2D3748; /* Darker container */
+            --text-primary: #E2E8F0; /* Light text */
+            --h1-color: #48BB78; /* Green for dark mode title */
+            --input-bg: #4A5568;
+            --input-border: #718096;
+            --input-text: #F7FAFC;
+            --placeholder-text: #A0AEC0;
+            --button-text-color: #E2E8F0; /* Lighter button text in dark mode */
+            --history-item-bg: #3F4A5D; /* Darker background for history items */
+            --history-item-hover-bg: #4A5568; /* Slightly lighter on hover in dark mode */
+        }
+
+        /* General Body Styling using variables */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        /* Main container styling using variables */
+        .container {
+            max-width: 600px;
+            width: 100%;
+            background-color: var(--container-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: relative; /* For toggle button positioning */
+            transition: background-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* Styling for section titles */
+        h2 {
+            color: var(--text-primary);
+            font-style: italic;
+            margin-bottom: 8px;
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Styling for the main title */
+        h1 {
+            color: var(--h1-color);
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Specific styling for the notes textarea and inputs */
+        textarea,
+        input[type="text"],
+        input[type="time"] { /* Removed date input type styling from here */
+            resize: vertical; /* Allow vertical resizing */
+            min-height: 100px; /* Adjusted min-height for notes textarea */
+            max-height: 300px; /* Maximum height for notes */
+            overflow-y: auto; /* Enable scroll if content exceeds max-height */
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--input-text);
+            transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        textarea::placeholder,
+        input[type="text"]::placeholder {
+            color: var(--placeholder-text);
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Common button styling */
+        button {
+            color: var(--button-text-color);
+            transition: background-color 0.2s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        /* Styling for all modal overlays */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: var(--container-bg); /* Use container bg for modal */
+            padding: 30px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            transform: translateY(-20px);
+            transition: transform 0.3s ease-in-out, background-color 0.3s ease-in-out;
+        }
+
+        .modal-overlay.show .modal-content {
+            transform: translateY(0);
+        }
+
+        .modal-content h3 {
+            color: var(--h1-color); /* Use H1 color for modal title */
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            transition: color 0.3s ease-in-out;
+        }
+
+        .modal-content p {
+            color: var(--text-primary); /* Use primary text color for modal message */
+            font-size: 18px;
+            margin-bottom: 25px;
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Styling for close buttons within modals */
+        .modal-content button {
+            background-color: #20B2AA; /* Light Sea Green */
+            color: white;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.2s ease-in-out;
+        }
+
+        .modal-content button:hover {
+            background-color: #198c86;
+        }
+
+        /* Specific styling for the 'Add to System Reminders' button */
+        #shareReminderBtn {
+            background-color: #4CAF50; /* Green */
+            margin-top: 15px;
+            padding: 10px 20px;
+            font-size: 16px;
+        }
+
+        #shareReminderBtn:hover {
+            background-color: #45a049;
+        }
+
+        /* Custom icon button styling for media apps */
+        .icon-button {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            min-height: 100px;
+        }
+        .icon-button img {
+            width: 60px;
+            height: 60px;
+            margin-bottom: 4px;
+            object-fit: contain;
+            background-color: transparent;
+        }
+        .icon-button span {
+            font-size: 0.875rem;
+            color: var(--button-text-color); /* Use button text color for consistency */
+            text-align: center;
+            transition: color 0.3s ease-in-out;
+        }
+
+        /* Dark mode toggle button */
+        #darkModeToggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 28px; /* Large emoji/icon size */
+            color: var(--text-primary); /* Inherit text color for icon */
+            transition: color 0.3s ease-in-out;
+            padding: 0; /* Remove padding from button */
+            line-height: 1; /* Adjust line height for emoji */
+        }
+        #darkModeToggle:hover {
+            opacity: 0.8;
+        }
+
+        /* Styling for the note history list items */
+        .note-history-item {
+            padding: 10px 15px;
+            margin-bottom: 8px;
+            background-color: var(--history-item-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out;
+            color: var(--text-primary); /* Ensure text color changes with theme */
+            font-weight: 500;
+        }
+        .note-history-item:hover {
+            background-color: var(--history-item-hover-bg);
+        }
+        .note-history-item.selected {
+            border: 2px solid var(--h1-color); /* Highlight selected date */
+        }
+    </style>
+</head>
+<body class="selection:bg-green-200">
+    <div class="container">
+        <!-- Dark Mode Toggle Button -->
+        <button id="darkModeToggle" aria-label="Toggle dark mode">
+            ☀️ <!-- Sun icon for light mode -->
+        </button>
+
+        <!-- Application Title -->
+        <h1 class="text-4xl font-bold text-center mb-8">My Quiet Time</h1>
+
+        <!-- Section for Media Access Buttons -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2">Listen to a Sermon/Media</h2>
+            <div class="grid grid-cols-2 gap-4">
+                <button id="btnSpotify" class="icon-button bg-[#1DB954] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#1DB954] focus:ring-opacity-50">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Spotify_2.png" onerror="this.onerror=null;this.src='https://placehold.co/60x60/1DB954/FFFFFF?text=🎵';" alt="Spotify Icon">
+                    <span>Spotify</span>
+                </button>
+                <button id="btnYouTube" class="icon-button bg-[#FF0000] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF0000] focus:ring-opacity-50">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/52/YouTube_social_white_circle_%282017%29.svg" onerror="this.onerror=null;this.src='https://placehold.co/60x60/FF0000/FFFFFF?text=▶️';" alt="YouTube Icon">
+                    <span>YouTube</span>
+                </button>
+                <button id="btnApplePodcasts" class="icon-button bg-[#9932CC] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#9932CC] focus:ring-opacity-50">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/e/e7/Podcasts_%28iOS%29.svg" onerror="this.onerror=null;this.src='https://placehold.co/60x60/9932CC/FFFFFF?text=🎙️';" alt="Apple Podcasts Icon">
+                    <span>Podcasts</span>
+                </button>
+                <button id="btnAppleMusic" class="icon-button bg-[#FF4500] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF4500] focus:ring-opacity-50">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/5/5f/Apple_Music_icon.svg" onerror="this.onerror=null;this.src='https://placehold.co/60x60/FF4500/FFFFFF?text=🎶';" alt="Apple Music Icon">
+                    <span>Apple Music</span>
+                </button>
+                <button id="btnBibleGateway" class="icon-button bg-[#3F51B5] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#3F51B5] focus:ring-opacity-50">
+                    <img src="https://www.biblegateway.com/favicon.ico" onerror="this.onerror=null;this.src='https://placehold.co/60x60/3F51B5/FFFFFF?text=📖';" alt="Bible Gateway Icon">
+                    <span>Bible Gateway</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Section for Note Taking -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2" id="notesSectionTitle">Current Note</h2>
+            <div class="flex flex-col space-y-3 mb-3">
+                <input type="text" id="noteTitleInput"
+                       class="w-full p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFA500] shadow-sm"
+                       placeholder="Enter note title">
+                <div class="flex space-x-2">
+                    <button id="btnCreateNewNote" class="flex-1 bg-[#4682B4] text-white py-3 px-6 rounded-lg shadow-md hover:bg-[#386d99] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#4682B4] focus:ring-opacity-50">
+                        Create New Note
+                    </button>
+                    <button id="btnSaveNote" class="flex-1 bg-[#2E8B57] text-white py-3 px-6 rounded-lg shadow-md hover:bg-[#256d43] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#2E8B57] focus:ring-opacity-50">
+                        Save Note
+                    </button>
+                </div>
+            </div>
+            <textarea id="etNotes"
+                      class="w-full p-4 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#2E8B57] shadow-sm"
+                      placeholder="What did you learn today?"></textarea>
+        </div>
+
+        <!-- Section for Note History -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2">Note History</h2>
+            <div id="noteHistoryList" class="flex flex-col space-y-2 max-h-60 overflow-y-auto pr-2">
+                <!-- Notes will be loaded here by JavaScript -->
+                <p class="text-sm text-gray-500 text-center" id="noNotesMessage">No notes saved yet.</p>
+            </div>
+        </div>
+
+
+        <!-- Section for Reminders -->
+        <div class="mb-6">
+            <h2 class="text-xl font-semibold mb-2">Set a Reminder</h2>
+            <input type="text" id="etReminderText"
+                   class="w-full p-3 border rounded-lg mb-3 focus:outline-none focus:ring-2 focus:ring-[#FFA500] shadow-sm"
+                   placeholder="e.g., 'Daily devotion time'">
+
+            <div class="flex items-center space-x-4 mb-4">
+                <input type="time" id="inputReminderTime"
+                       class="flex-1 p-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#FFA500] shadow-sm">
+                <span id="tvSelectedTime" class="text-lg font-semibold">No time selected</span>
+            </div>
+
+            <button id="btnSetReminder" class="w-full bg-[#20B2AA] text-white py-4 rounded-lg shadow-md hover:bg-[#198c86] transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-[#20B2AA] focus:ring-opacity-50 text-lg font-medium">
+                Set Reminder
+            </button>
+        </div>
+    </div>
+
+    <!-- Confirmation/Error Modal -->
+    <div id="appModalOverlay" class="modal-overlay">
+        <div class="modal-content flex flex-col items-center">
+            <h3 id="appModalTitle"></h3>
+            <p id="appModalMessage"></p>
+            <button id="appModalCloseBtn" class="w-auto px-6 py-2">Got It!</button>
+            <button id="shareReminderBtn" class="w-auto px-6 py-2 hidden">Add to System Reminders</button>
+        </div>
+    </div>
+
+    <!-- Reminder Modal (for in-browser notification) -->
+    <div id="reminderModalOverlay" class="modal-overlay">
+        <div class="modal-content">
+            <h3 id="modalTitle">Quiet Time Reminder!</h3>
+            <p id="modalMessage">It's time for your quiet time!</p>
+            <button id="modalCloseBtn">Got It!</button>
+        </div>
+    </div>
+
+    <script>
+        // Get references to DOM elements
+        const etNotes = document.getElementById('etNotes');
+        const btnSpotify = document.getElementById('btnSpotify');
+        const btnYouTube = document.getElementById('btnYouTube');
+        const btnApplePodcasts = document.getElementById('btnApplePodcasts');
+        const btnAppleMusic = document.getElementById('btnAppleMusic');
+        const btnBibleGateway = document.getElementById('btnBibleGateway'); // New: Bible Gateway button
+        const etReminderText = document.getElementById('etReminderText');
+        const inputReminderTime = document.getElementById('inputReminderTime');
+        const tvSelectedTime = document.getElementById('tvSelectedTime');
+        const btnSetReminder = document.getElementById('btnSetReminder');
+        const btnSaveNote = document.getElementById('btnSaveNote'); // Save Note button
+        const btnCreateNewNote = document.getElementById('btnCreateNewNote'); // Create New Note button
+
+        // General app modal elements (for confirmation/errors)
+        const appModalOverlay = document.getElementById('appModalOverlay');
+        const appModalTitle = document.getElementById('appModalTitle');
+        const appModalMessage = document.getElementById('appModalMessage');
+        const appModalCloseBtn = document.getElementById('appModalCloseBtn');
+        const shareReminderBtn = document.getElementById('shareReminderBtn');
+
+        // In-browser reminder modal elements
+        const reminderModalOverlay = document.getElementById('reminderModalOverlay');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalCloseBtn = document.getElementById('modalCloseBtn');
+
+        const darkModeToggle = document.getElementById('darkModeToggle'); // Dark mode toggle button
+        const noteTitleInput = document.getElementById('noteTitleInput'); // Input for note title
+        const notesSectionTitle = document.getElementById('notesSectionTitle'); // Title for notes section
+        const noteHistoryList = document.getElementById('noteHistoryList'); // Container for note history list
+        const noNotesMessage = document.getElementById('noNotesMessage'); // Message for no notes
+
+        let reminderTimeoutId; // To store the timeout ID for clearing previous in-browser reminders
+        let currentReminderDetails = {}; // Stores details for sharing
+        let currentSelectedNoteTitle = null; // Global variable to store the currently selected note title
+
+        /**
+         * Loads the note for the given title from local storage and updates the textarea.
+         * Updates the global `currentSelectedNoteTitle` and `noteTitleInput`.
+         * @param {string} title - The title of the note to load.
+         */
+        function loadNoteByTitle(title) {
+            currentSelectedNoteTitle = title; // Update global tracking variable
+            const allNotes = JSON.parse(localStorage.getItem('allNotesByTitle') || '{}');
+            etNotes.value = allNotes[title] || ''; // Load note content or empty string
+            noteTitleInput.value = title; // Set the title input field
+
+            // Update the notes section title to reflect the loaded note
+            notesSectionTitle.textContent = title;
+
+            // Highlight the selected item in the history list
+            document.querySelectorAll('.note-history-item').forEach(item => {
+                item.classList.remove('selected');
+                if (item.dataset.title === title) {
+                    item.classList.add('selected');
+                }
+            });
+        }
+
+        /**
+         * Clears the current notes pane and prepares for a new note.
+         * Sets `currentSelectedNoteTitle` to null.
+         */
+        function startNewNote() {
+            currentSelectedNoteTitle = null; // No note selected yet
+            etNotes.value = ''; // Clear notes content
+            noteTitleInput.value = ''; // Clear title input
+            notesSectionTitle.textContent = 'New Note'; // Update section title
+            document.querySelectorAll('.note-history-item').forEach(item => item.classList.remove('selected')); // Deselect all history items
+            showAppModal('New Note', 'Ready to create a new note! Enter a title and start writing.', false);
+        }
+
+        /**
+         * Saves the current content of the notes textarea to local storage
+         * using the `currentSelectedNoteTitle` as the key.
+         */
+        function saveNotes() {
+            const titleToSave = noteTitleInput.value.trim();
+            const noteContent = etNotes.value.trim();
+
+            if (titleToSave === '') {
+                showAppModal('Error', 'Please enter a title for your note before saving.');
+                return;
+            }
+
+            let allNotes = JSON.parse(localStorage.getItem('allNotesByTitle') || '{}');
+
+            // If the note content is empty, consider it a deletion or no change
+            if (noteContent === '') {
+                if (allNotes.hasOwnProperty(titleToSave)) {
+                    delete allNotes[titleToSave]; // Remove the note if cleared
+                    localStorage.setItem('allNotesByTitle', JSON.stringify(allNotes));
+                    showAppModal('Note Cleared!', `Note "${titleToSave}" has been cleared.`, false);
+                } else {
+                    showAppModal('No Content', 'The notes area is empty. Nothing to save or clear for this title.', false);
+                }
+            } else {
+                // Save or update the note
+                allNotes[titleToSave] = noteContent;
+                localStorage.setItem('allNotesByTitle', JSON.stringify(allNotes));
+                showAppModal('Note Saved!', `Note "${titleToSave}" has been saved.`, false);
+            }
+
+            renderNoteHistory(); // Refresh history list
+            startNewNote(); // Reset notes pane for a new note
+        }
+
+        // Event listener for Create New Note button
+        btnCreateNewNote.addEventListener('click', startNewNote);
+
+        // Event listener for Save Note button
+        btnSaveNote.addEventListener('click', saveNotes);
+
+
+        /**
+         * Renders the list of saved note titles in the "Note History" section.
+         */
+        function renderNoteHistory() {
+            noteHistoryList.innerHTML = ''; // Clear previous list
+            const allNotes = JSON.parse(localStorage.getItem('allNotesByTitle') || '{}');
+            const sortedTitles = Object.keys(allNotes).sort((a, b) => {
+                // Optional: Sort by last modified date if you want
+                // For now, sorting alphabetically by title
+                return a.localeCompare(b);
+            });
+
+            if (sortedTitles.length === 0) {
+                noNotesMessage.classList.remove('hidden');
+                noteHistoryList.appendChild(noNotesMessage);
+            } else {
+                noNotesMessage.classList.add('hidden');
+                sortedTitles.forEach(title => {
+                    const listItem = document.createElement('div');
+                    listItem.classList.add('note-history-item', 'rounded-lg', 'shadow-sm', 'cursor-pointer', 'p-3', 'hover:opacity-90', 'transition-opacity', 'duration-150');
+                    listItem.dataset.title = title; // Store title in dataset
+                    listItem.textContent = title; // Display the title
+
+                    // Add click listener to load the note for that title
+                    listItem.addEventListener('click', () => {
+                        loadNoteByTitle(title);
+                    });
+                    noteHistoryList.appendChild(listItem);
+                });
+            }
+        }
+
+        /**
+         * Shows a custom modal with a title and message.
+         * Optionally displays a "Share to System Reminders" button.
+         * @param {string} title The title for the modal.
+         * @param {string} message The message content for the modal.
+         * @param {boolean} showShareButton If true, shows the share button.
+         */
+        function showAppModal(title, message, showShareButton = false) {
+            appModalTitle.textContent = title;
+            appModalMessage.textContent = message;
+            if (showShareButton && navigator.share) { // Check if Web Share API is supported
+                shareReminderBtn.classList.remove('hidden');
+            } else {
+                shareReminderBtn.classList.add('hidden');
+            }
+            appModalOverlay.classList.add('show');
+        }
+
+        // Hide the general app modal
+        appModalCloseBtn.addEventListener('click', () => {
+            appModalOverlay.classList.remove('show');
+        });
+
+        // Event listener for the "Share to System Reminders" button
+        shareReminderBtn.addEventListener('click', async () => {
+            if (navigator.share) {
+                try {
+                    await navigator.share({
+                        title: currentReminderDetails.title || 'Quiet Time Reminder',
+                        text: currentReminderDetails.message || 'Time for your quiet time!',
+                    });
+                    console.log('Reminder shared successfully!');
+                } catch (error) {
+                    console.error('Error sharing reminder:', error);
+                    // Handle user cancellation or other errors
+                    showAppModal('Share Failed', 'Could not share the reminder. Please try again.');
+                }
+            } else {
+                showAppModal('Feature Not Supported', 'Web Share API is not supported in this browser.');
+            }
+            appModalOverlay.classList.remove('show'); // Hide modal after sharing attempt
+        });
+
+
+        // Function to open Spotify
+        btnSpotify.addEventListener('click', () => {
+            const spotifyAppUri = 'spotify://open';
+            const spotifyWebUrl = 'https://open.spotify.com/';
+            window.open(spotifyAppUri, '_blank');
+            setTimeout(() => { if (document.hasFocus()) { window.open(spotifyWebUrl, '_blank'); }}, 500);
+        });
+
+        // Function to open YouTube for sermons
+        btnYouTube.addEventListener('click', () => {
+            window.open('https://www.youtube.com/results?search_query=sermons+online', '_blank');
+        });
+
+        // Function to open Apple Podcasts
+        btnApplePodcasts.addEventListener('click', () => {
+            window.open('https://podcasts.apple.com/us/genre/religion-spirituality/id1314', '_blank');
+        });
+
+        // Function to open Apple Music
+        btnAppleMusic.addEventListener('click', () => {
+            window.open('https://music.apple.com/', '_blank');
+        });
+
+        // New: Function to open Bible Gateway
+        btnBibleGateway.addEventListener('click', () => {
+            window.open('https://www.biblegateway.com/', '_blank');
+        });
+
+        // Event listener for time input change to update displayed time
+        inputReminderTime.addEventListener('change', () => {
+            tvSelectedTime.textContent = inputReminderTime.value || 'No time selected';
+        });
+
+        // Function to display the in-browser reminder modal
+        function showReminderModal(message) {
+            modalMessage.textContent = message;
+            reminderModalOverlay.classList.add('show');
+        }
+
+        // Function to hide the in-browser reminder modal
+        modalCloseBtn.addEventListener('click', () => {
+            reminderModalOverlay.classList.remove('show');
+        });
+
+        // Function to set the reminder
+        btnSetReminder.addEventListener('click', () => {
+            const reminderText = etReminderText.value.trim();
+            const reminderTime = inputReminderTime.value; // Format: HH:MM
+
+            if (reminderText === "") {
+                showAppModal('Input Missing', 'Please enter reminder text.');
+                return;
+            }
+            if (reminderTime === "") {
+                showAppModal('Input Missing', 'Please select a time for the reminder.');
+                return;
+            }
+
+            // Clear any existing in-browser reminder
+            if (reminderTimeoutId) {
+                clearTimeout(reminderTimeoutId);
+            }
+
+            const [hour, minute] = reminderTime.split(':').map(Number);
+            const now = new Date();
+            let reminderDate = new Date();
+            reminderDate.setHours(hour, minute, 0, 0);
+
+            // If the reminder time is in the past today, set it for tomorrow
+            if (reminderDate.getTime() <= now.getTime()) {
+                reminderDate.setDate(reminderDate.getDate() + 1);
+            }
+
+            const timeUntilReminder = reminderDate.getTime() - now.getTime();
+
+            // Set the timeout for the in-browser reminder
+            reminderTimeoutId = setTimeout(() => {
+                showReminderModal(reminderText);
+                // After showing, immediately set it for the next day for a daily reminder
+                setDailyReminder(reminderText, hour, minute);
+            }, timeUntilReminder);
+
+            // Store current reminder details for sharing
+            currentReminderDetails = {
+                title: 'Quiet Time Reminder',
+                message: `Reminder: ${reminderText} at ${reminderTime}`,
+                time: reminderTime,
+                text: reminderText
+            };
+
+            // Save reminder details to local storage to persist across sessions
+            localStorage.setItem('quietTimeReminderText', reminderText);
+            localStorage.setItem('quietTimeReminderTime', reminderTime);
+            localStorage.setItem('quietTimeNextReminderTimestamp', reminderDate.getTime().toString());
+
+            showAppModal('Reminder Set!', `Your in-browser reminder is set for ${reminderTime}.`, true); // Show share button
+        });
+
+        // Function to set a daily reminder after the first one fires or on app load
+        function setDailyReminder(message, hour, minute) {
+             // Clear any existing timeout before setting a new one
+            if (reminderTimeoutId) {
+                clearTimeout(reminderTimeoutId);
+            }
+
+            const now = new Date();
+            let reminderDate = new Date();
+            reminderDate.setHours(hour, minute, 0, 0);
+
+            // If the current reminder time is now or in the past, set it for tomorrow
+            if (reminderDate.getTime() <= now.getTime()) {
+                reminderDate.setDate(reminderDate.getDate() + 1);
+            }
+
+            const timeUntilReminder = reminderDate.getTime() - now.getTime();
+
+            reminderTimeoutId = setTimeout(() => {
+                showReminderModal(message);
+                // Recursively call to set the reminder for the next day
+                setDailyReminder(message, hour, minute);
+            }, timeUntilReminder);
+
+            // Update stored next reminder timestamp
+            localStorage.setItem('quietTimeNextReminderTimestamp', reminderDate.getTime().toString());
+        }
+
+        // --- Dark Mode Logic ---
+        function applyTheme(theme) {
+            if (theme === 'dark') {
+                document.body.classList.add('dark-mode');
+                darkModeToggle.textContent = '🌙'; // Moon icon for dark mode
+                darkModeToggle.setAttribute('aria-label', 'Toggle light mode');
+            } else {
+                document.body.classList.remove('dark-mode');
+                darkModeToggle.textContent = '☀️'; // Sun icon for light mode
+                darkModeToggle.setAttribute('aria-label', 'Toggle dark mode');
+            }
+            localStorage.setItem('theme', theme); // Save preference
+        }
+
+        // --- Initialization on Page Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // Initialize notes section to "New Note"
+            notesSectionTitle.textContent = 'New Note';
+            etNotes.value = '';
+            noteTitleInput.value = '';
+
+            // Load and re-set reminder if one was previously set
+            const savedReminderText = localStorage.getItem('quietTimeReminderText');
+            const savedReminderTime = localStorage.getItem('quietTimeReminderTime');
+            const savedNextReminderTimestamp = localStorage.getItem('quietTimeNextReminderTimestamp');
+
+            if (savedReminderText && savedReminderTime && savedNextReminderTimestamp) {
+                etReminderText.value = savedReminderText;
+                inputReminderTime.value = savedReminderTime;
+                tvSelectedTime.textContent = savedReminderTime;
+
+                const nextReminderDate = new Date(parseInt(savedNextReminderTimestamp));
+                const now = new Date();
+
+                if (nextReminderDate.getTime() > now.getTime()) {
+                    // If the next reminder is still in the future, set it directly
+                    const timeUntilNextReminder = nextReminderDate.getTime() - now.getTime();
+                    reminderTimeoutId = setTimeout(() => {
+                        showReminderModal(savedReminderText);
+                        setDailyReminder(savedReminderText, nextReminderDate.getHours(), nextReminderDate.getMinutes());
+                    }, timeUntilReminder);
+                    console.log('Existing reminder re-set for:', nextReminderDate);
+                } else {
+                    // If the reminder time has passed since last session, set it for the next occurrence
+                    const [hour, minute] = savedReminderTime.split(':').map(Number);
+                    setDailyReminder(savedReminderText, hour, minute);
+                    console.log('Existing reminder re-set for the next day due to past time.');
+                }
+            }
+
+            // Apply saved theme on load
+            const savedTheme = localStorage.getItem('theme') || 'light'; // Default to light
+            applyTheme(savedTheme);
+
+            renderNoteHistory(); // Render the note history on load
+        });
+
+        darkModeToggle.addEventListener('click', () => {
+            const currentTheme = document.body.classList.contains('dark-mode') ? 'dark' : 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+        });
+    </script>
+</body>
+</html>
