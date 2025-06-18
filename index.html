@@ -78,18 +78,33 @@
         }
 
         /* Specific styling for the notes textarea and inputs */
-        textarea,
-        input[type="text"],
-        input[type="time"] { /* Removed date input type styling from here */
+        textarea {
             resize: vertical; /* Allow vertical resizing */
-            min-height: 100px; /* Adjusted min-height for notes textarea */
-            max-height: 300px; /* Maximum height for notes */
+            min-height: 180px; /* Increased min-height for notes textarea */
+            max-height: 400px; /* Adjusted max-height for notes */
             overflow-y: auto; /* Enable scroll if content exceeds max-height */
             background-color: var(--input-bg);
             border-color: var(--input-border);
             color: var(--input-text);
             transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;
         }
+
+        input[type="text"],
+        input[type="time"] {
+            /* Common styles for text and time inputs */
+            background-color: var(--input-bg);
+            border-color: var(--input-border);
+            color: var(--input-text);
+            transition: background-color 0.3s ease-in-out, border-color 0.3s ease-in-out, color 0.3s ease-in-out;
+        }
+
+        /* Specific style for noteTitleInput to reduce its size */
+        #noteTitleInput {
+            min-height: auto; /* Allow height to be determined by content/padding */
+            height: 48px; /* Fixed height for a single line input */
+            padding: 12px; /* Adjust padding for better appearance */
+        }
+
 
         textarea::placeholder,
         input[type="text"]::placeholder {
@@ -257,7 +272,7 @@
             <h2 class="text-xl font-semibold mb-2">Listen to a Sermon/Media</h2>
             <div class="grid grid-cols-2 gap-4">
                 <button id="btnSpotify" class="icon-button bg-[#1DB954] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#1DB954] focus:ring-opacity-50">
-                    <img src="https://upload.wikimedia.org/wikipedia/commons/7/78/Spotify_2.png" onerror="this.onerror=null;this.src='https://placehold.co/60x60/1DB954/FFFFFF?text=🎵';" alt="Spotify Icon">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/8/84/Spotify_icon.svg" onerror="this.onerror=null;this.src='https://placehold.co/60x60/1DB954/FFFFFF?text=🎵';" alt="Spotify Icon">
                     <span>Spotify</span>
                 </button>
                 <button id="btnYouTube" class="icon-button bg-[#FF0000] rounded-lg shadow-md hover:brightness-90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#FF0000] focus:ring-opacity-50">
@@ -706,7 +721,7 @@
                     reminderTimeoutId = setTimeout(() => {
                         showReminderModal(savedReminderText);
                         setDailyReminder(savedReminderText, nextReminderDate.getHours(), nextReminderDate.getMinutes());
-                    }, timeUntilReminder);
+                    }, timeUntilNextReminder);
                     console.log('Existing reminder re-set for:', nextReminderDate);
                 } else {
                     // If the reminder time has passed since last session, set it for the next occurrence
